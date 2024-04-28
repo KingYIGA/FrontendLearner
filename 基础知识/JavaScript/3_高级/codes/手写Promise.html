@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写Promise</title>
+</head>
+
+<body>
+
+</body>
+<script>
+  // 构造函数实现
+  function Commitment(executor) {
+    // 添加属性
+    this.PromiseState = 'pending';
+    this.PromiseResult = null;
+    this.callbacks = [];
+    // 保存this值
+    const self = this;
+
+    // 直接抛出错误
+    try {
+      // 同步调用
+      executor(resolve, reject);
+    } catch (error) {
+      reject(error);
+    }
+
+    function resolve(data) {
+      // 状态只允许修改一次
+      if (self.PromiseState !== 'pending') return;
+      // 1. 修改对象状态PromiseState
+      self.PromiseState = 'fulfilled'; resolved
+
+      // 2. 修改对象结果值 PromiseResult
+      self.PromiseResult = data;
+
+      // 调用成功的回调
+      self.callbacks.forEach(({ onResolve }) => {
+        onResolve(data);
+      });
+    }
+
+    function reject(data) {
+      // 状态只允许修改一次
+      if (self.PromiseState !== 'pending') return;
+      // 1. 修改状态
+      self.PromiseState = 'rejected';
+      // 2. 修改值
+      self.PromiseResult = data;
+
+      // 调用成功的回调
+      self.callbacks.forEach(({ onReject }) => {
+        onReject(data);
+      });
+    }
+  };
+
+  // 添加then方法
+  Commitment.prototype.then = function (onResolve, onReject) {
+    const self = this;
+    return new Commitment((resolve, reject) => {
+      if (this.PromiseState === 'pending') {
+        onReject(this.PromiseResult);
+        this.callbacks.push({
+          onResolve,
+          onReject
+        });
+      }
+
+      if (this.PromiseState === 'fulfilled') {
+        try {
+          // 获取then第一个回调返回的值
+          let result = onResolve(this.PromiseResult);
+
+          if (result instanceof Commitment) {
+            // 如果是 Commitment 类型的对象
+            result.then(v => {
+              resolve(v);
+            }, r => {
+              reject(r);
+            })
+          } else {
+            resolve(result)
+          };
+
+        } catch (error) {
+          reject(error);
+        }
+
+      }
+
+      if (this.PromiseState === 'rejected') {
+        onReject(this.PromiseResult);
+      }
+
+    })
+  }
+
+  const promise = new Commitment((resolve, reject) => {
+    // resolve('test');
+    // reject('err');
+    throw 'error';
+  });
+
+  promise.then((value) => {
+    console.log(value);
+  }, (reason) => {
+    console.warn(reason);
+  })
+</script>
+
+</html>

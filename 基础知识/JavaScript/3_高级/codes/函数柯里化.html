@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>函数柯里化</title>
+</head>
+
+<body>
+
+</body>
+<script>
+  const statusList = [
+    { name: '待定', value: 'pending' },
+    { name: '成功', value: 'resolved' },
+    { name: '失败', value: 'rejected' },
+  ];
+
+  const typeList = [
+    { key: '脱敏', value: 'dm' },
+    { key: '审计', value: 'ident' },
+    { key: '告警', value: 'audit' },
+  ];
+
+  function handleFormat(label, value) {
+    return (element) => ({ label: element[label], value: element[value] })
+  }
+
+  let statusFormat = handleFormat('name', 'value');
+  let typeFormat = handleFormat('key', 'value');
+
+  console.log(statusList.map((item, index) => {
+    return statusFormat(item)
+  }));
+
+  console.log(typeList.map((item, index) => {
+    return typeFormat(item)
+  }));
+
+
+</script>
+
+</html>
